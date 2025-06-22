@@ -9,6 +9,8 @@ import {
   Req,
   HttpCode,
 } from '@nestjs/common';
+import { getClientIp } from 'request-ip';
+
 import { ShortUrlService } from './short-url.service';
 
 import { Response, Request } from 'express';
@@ -17,16 +19,19 @@ import { CreateShortUrlDto } from './dto/create-short-url.dto';
 @Controller()
 export class ShortUrlController {
   constructor(private readonly service: ShortUrlService) {}
-  @Get()
-  hi() {
-    return 'Hello shortener...';
-  }
+
   @Post('shorten')
   async create(@Body() dto: CreateShortUrlDto) {
     const url = await this.service.create(dto);
     return {
-      shortUrl: `${process.env.BASE_URL || 'http://localhost:3000'}/${url.alias}`,
+      ...url,
+      alias: `${process.env.BASE_URL || 'http://localhost:3000'}/${url.alias}`,
     };
+  }
+
+  @Get('urls')
+  async getAllUrls() {
+    return this.service.getAllUrls();
   }
 
   @Get(':alias')
@@ -35,7 +40,8 @@ export class ShortUrlController {
     @Res() res: Response,
     @Req() req: Request,
   ) {
-    const originalUrl = await this.service.redirect(alias, req.ip || 'unknown');
+    const ip = getClientIp(req);
+    const originalUrl = await this.service.redirect(alias, ip || 'unknown');
     return res.redirect(originalUrl);
   }
 

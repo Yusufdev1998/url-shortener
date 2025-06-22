@@ -1,121 +1,121 @@
-import React, { useState } from "react";
-import { createShortUrl, getInfo, getAnalytics, deleteShortUrl } from "./api";
+import { useState } from 'react';
+import { UrlShortenerForm } from '@/components/UrlShortenerForm';
+import { UrlResult } from '@/components/UrlResult';
+import { UrlManagement } from '@/components/UrlManagement';
+import { Toaster } from '@/components/ui/toaster';
+import { ShortenResponse } from '@/types/api';
+import { LinkIcon, Github, Zap } from 'lucide-react';
+import './App.css';
 
 function App() {
-  const [originalUrl, setOriginalUrl] = useState("");
-  const [alias, setAlias] = useState("");
-  const [expiresAt, setExpiresAt] = useState("");
-  const [shortUrl, setShortUrl] = useState("");
-  const [info, setInfo] = useState<any>(null);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [error, setError] = useState("");
+  const [shortenedUrl, setShortenedUrl] = useState<ShortenResponse | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    try {
-      const res = await createShortUrl({ originalUrl, alias, expiresAt });
-      setShortUrl(res.shortUrl);
-      setInfo(null);
-      setAnalytics(null);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const handleInfo = async () => {
-    setError("");
-    try {
-      const res = await getInfo(alias);
-      setInfo(res);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const handleAnalytics = async () => {
-    setError("");
-    try {
-      const res = await getAnalytics(alias);
-      setAnalytics(res);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const handleDelete = async () => {
-    setError("");
-    try {
-      await deleteShortUrl(alias);
-      setShortUrl("");
-      setInfo(null);
-      setAnalytics(null);
-    } catch (err: any) {
-      setError(err.message);
-    }
+  const handleUrlShortened = (response: ShortenResponse) => {
+    setShortenedUrl(response);
+    setRefreshTrigger(prev => prev + 1);
   };
 
   return (
-    <div
-      style={{ maxWidth: 600, margin: "2rem auto", fontFamily: "sans-serif" }}
-    >
-      <h1>URL Shortener</h1>
-      <form onSubmit={handleCreate}>
-        <input
-          type="url"
-          placeholder="Original URL"
-          value={originalUrl}
-          onChange={e => setOriginalUrl(e.target.value)}
-          required
-          style={{ width: "100%" }}
-        />
-        <input
-          type="text"
-          placeholder="Alias (optional)"
-          value={alias}
-          onChange={e => setAlias(e.target.value)}
-          maxLength={20}
-          style={{ width: "100%" }}
-        />
-        <input
-          type="datetime-local"
-          placeholder="Expires At (optional)"
-          value={expiresAt}
-          onChange={e => setExpiresAt(e.target.value)}
-          style={{ width: "100%" }}
-        />
-        <button type="submit">Create Short URL</button>
-      </form>
-      {shortUrl && (
-        <div>
-          <p>
-            Short URL:{" "}
-            <a href={shortUrl} target="_blank" rel="noopener noreferrer">
-              {shortUrl}
-            </a>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Header */}
+      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600">
+                <LinkIcon className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  URL Shortener
+                </h1>
+                <p className="text-sm text-muted-foreground">Professional link management</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <div className="hidden sm:flex items-center space-x-1 text-sm text-muted-foreground">
+                <Zap className="h-4 w-4" />
+                <span>Powered by Passion & Hard work</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Hero Section */}
+        <div className="text-center space-y-4 py-8">
+          <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+            Shorten, Share, Track
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Create short, memorable links with powerful analytics and management features. 
+            Perfect for social media, marketing campaigns, and professional use.
           </p>
         </div>
-      )}
-      <div>
-        <button onClick={handleInfo}>Get Info</button>
-        <button onClick={handleAnalytics}>Get Analytics</button>
-        <button onClick={handleDelete}>Delete</button>
-      </div>
-      {info && (
-        <div>
-          <h3>Info</h3>
-          <pre>{JSON.stringify(info, null, 2)}</pre>
+
+        {/* URL Shortener Form */}
+        <UrlShortenerForm onUrlShortened={handleUrlShortened} />
+
+        {/* URL Result */}
+        {shortenedUrl && (
+          <div className="animate-in slide-in-from-bottom-4 duration-500">
+            <UrlResult result={shortenedUrl} />
+          </div>
+        )}
+
+        {/* URL Management */}
+        <div className="space-y-2">
+          <UrlManagement refreshTrigger={refreshTrigger} />
         </div>
-      )}
-      {analytics && (
-        <div>
-          <h3>Analytics</h3>
-          <pre>{JSON.stringify(analytics, null, 2)}</pre>
+
+        {/* Features Section */}
+        <div className="py-12">
+          <div className="text-center mb-12">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Why Choose Our URL Shortener?</h3>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Professional-grade features for individuals and businesses
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-6 rounded-lg bg-white border shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-blue-100 flex items-center justify-center">
+                <LinkIcon className="h-6 w-6 text-blue-600" />
+              </div>
+              <h4 className="font-semibold mb-2">Custom Aliases</h4>
+              <p className="text-sm text-muted-foreground">
+                Create memorable, branded short links with custom aliases up to 20 characters.
+              </p>
+            </div>
+            
+            <div className="text-center p-6 rounded-lg bg-white border shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-green-100 flex items-center justify-center">
+                <Zap className="h-6 w-6 text-green-600" />
+              </div>
+              <h4 className="font-semibold mb-2">Advanced Analytics</h4>
+              <p className="text-sm text-muted-foreground">
+                Track click counts, IP addresses, and detailed analytics for all your links.
+              </p>
+            </div>
+            
+            <div className="text-center p-6 rounded-lg bg-white border shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-purple-100 flex items-center justify-center">
+                <Github className="h-6 w-6 text-purple-600" />
+              </div>
+              <h4 className="font-semibold mb-2">Expiry Control</h4>
+              <p className="text-sm text-muted-foreground">
+                Set expiration dates for temporary campaigns and time-sensitive content.
+              </p>
+            </div>
+          </div>
         </div>
-      )}
-      {error && <div style={{ color: "red" }}>{error}</div>}
+      </main>
+      <Toaster />
     </div>
   );
 }
-
 export default App;

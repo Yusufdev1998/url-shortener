@@ -39,6 +39,9 @@ export class ShortUrlService {
     return this.shortUrlRepo.save(shortUrl);
   }
 
+  async getAllUrls(): Promise<ShortUrl[]> {
+    return this.shortUrlRepo.find();
+  }
   async findByAlias(alias: string): Promise<ShortUrl> {
     const url = await this.shortUrlRepo.findOne({ where: { alias } });
     if (!url) throw new NotFoundException('Short URL not found');
@@ -47,11 +50,16 @@ export class ShortUrlService {
 
   async redirect(alias: string, ip: string): Promise<string> {
     const url = await this.findByAlias(alias);
+
     if (url.expiresAt && new Date() > url.expiresAt)
       throw new NotFoundException('Short URL expired');
+
     url.clickCount += 1;
     await this.shortUrlRepo.save(url);
+ 
+    
     await this.clickRepo.save(this.clickRepo.create({ shortUrl: url, ip }));
+
     return url.originalUrl;
   }
 
@@ -70,12 +78,16 @@ export class ShortUrlService {
   }
 
   async getAnalytics(alias: string) {
+    console.log(alias);
+    
     const url = await this.findByAlias(alias);
     const clicks = await this.clickRepo.find({
-      where: { shortUrl: url },
+      where: { shortUrl: { id: url.id } },
       order: { clickedAt: 'DESC' },
       take: 5,
     });
+ 
+    
     return {
       clickCount: url.clickCount,
       last5Ips: clicks.map((c) => c.ip),

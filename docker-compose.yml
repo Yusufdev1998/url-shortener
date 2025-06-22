@@ -3,9 +3,9 @@ services:
     image: postgres:15
     container_name: url-db
     environment:
-      POSTGRES_DB: shortener
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -15,9 +15,9 @@ services:
     build:
       context: ./backend
       target: prod
+    env_file:
+      - .env
     container_name: url-backend
-    environment:
-      - DATABASE_URL=postgres://user:pass@db:5432/shortener
     ports:
       - "3000:3000"
     depends_on:
@@ -27,6 +27,8 @@ services:
     build:
       context: ./frontend
       target: prod
+    env_file:
+      - .env
     container_name: url-frontend
     ports:
       - "5173:80"
