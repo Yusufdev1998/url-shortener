@@ -18,6 +18,10 @@ services:
     env_file:
       - .env
     container_name: url-backend
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    working_dir: /app
     ports:
       - "3000:3000"
     depends_on:
@@ -30,6 +34,10 @@ services:
     env_file:
       - .env
     container_name: url-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    working_dir: /app
     ports:
       - "5173:80"
     depends_on:
