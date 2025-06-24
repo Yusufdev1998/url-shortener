@@ -31,15 +31,12 @@ services:
     build:
       context: ./frontend
       target: prod
-    env_file:
-      - .env
+      args:
+        VITE_BASE_URL: ${VITE_BASE_URL}
+
     container_name: url-frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    working_dir: /app
     ports:
-      - "5173:80"
+      - "8080:80" # serving static site via Nginx on port 80
     depends_on:
       - backend
 
