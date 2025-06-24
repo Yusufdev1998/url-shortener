@@ -3,7 +3,6 @@ import { IShortenRequest } from "@/types/api";
 import axios from "axios";
 
 const API_URL = BASE_URL;
-console.log(API_URL);
 
 export async function createShortUrl(data: IShortenRequest) {
   try {
