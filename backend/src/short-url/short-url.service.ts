@@ -6,10 +6,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { nanoid } from 'nanoid';
 import { ShortUrl } from './entities/short-url.entity';
 import { Click } from './entities/click.entity';
 import { CreateShortUrlDto } from './dto/create-short-url.dto';
+import { generateShortCode } from '../utils/functions';
 
 @Injectable()
 export class ShortUrlService {
@@ -28,7 +28,7 @@ export class ShortUrlService {
     } else {
       // Generate unique alias
       do {
-        alias = nanoid(8);
+        alias = generateShortCode(8);
       } while (await this.shortUrlRepo.findOne({ where: { alias } }));
     }
     const shortUrl = this.shortUrlRepo.create({
@@ -56,8 +56,7 @@ export class ShortUrlService {
 
     url.clickCount += 1;
     await this.shortUrlRepo.save(url);
- 
-    
+
     await this.clickRepo.save(this.clickRepo.create({ shortUrl: url, ip }));
 
     return url.originalUrl;
@@ -79,15 +78,14 @@ export class ShortUrlService {
 
   async getAnalytics(alias: string) {
     console.log(alias);
-    
+
     const url = await this.findByAlias(alias);
     const clicks = await this.clickRepo.find({
       where: { shortUrl: { id: url.id } },
       order: { clickedAt: 'DESC' },
       take: 5,
     });
- 
-    
+
     return {
       clickCount: url.clickCount,
       last5Ips: clicks.map((c) => c.ip),
